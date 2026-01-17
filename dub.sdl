@@ -1,0 +1,8 @@
+name "autism"
+description "Autism"
+authors "wav3"
+copyright "Copyright © 2025, wav3"
+license "GPL-3.0-or-later"
+dependency "bindbc-opengl" version="~>1.1.1"
+dependency "glfw-d" version="~>1.1.2"
+versions "GL_AllowDeprecated"
