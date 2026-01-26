@@ -11,8 +11,6 @@ import std.ascii;
 
 public import bindbc.opengl;
 
-public GLFWwindow* window;
-
 extern(C) nothrow @nogc
 {
 	alias pglBitmap = void function(GLsizei, GLsizei, GLfloat, GLfloat,GLfloat, GLfloat, GLubyte*);
@@ -20,6 +18,7 @@ extern(C) nothrow @nogc
 
 public pglBitmap glBitmap;
 
+public GLFWwindow* window;
 
 void glBlendColor4ub(ubyte fr, ubyte fg, ubyte fb, ubyte fa)
 {
