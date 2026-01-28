@@ -1,3 +1,5 @@
+import userdata;
+
 enum AssetType
 {
 	Dummy,

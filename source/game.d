@@ -1,6 +1,7 @@
 import bag;
 import script;
-import files;
+import storage;
+import user;
 
 enum WorldState
 {
@@ -19,7 +20,7 @@ class World
 	Script[ulong] scripts;
 	ulong[] scheduled_scripts;
 	
-	Storage storage;
+	Storage[User] storage;
 	
 	void Tick(double delta)
 	{
