@@ -4,8 +4,14 @@ import bindbc.opengl;
 import asset;
 import std.concurrency;
 import std.stdio;
+import math;
 
-class Model
+struct Camera
+{
+	float4x4 view;
+}
+
+struct Model
 {
 	float[] points =
 		[
@@ -23,8 +29,14 @@ class Model
 	const char* vertex_shader =
 		"#version 460 core
 		in vec3 vp;
+		uniform mat4 view = mat4(
+			1.0, 0.0, 0.0, 0.0,
+			0.0, 1.0, 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0,
+			0.0, 0.0, 0.0, 1.0
+		);
 		void main() {
-			gl_Position = vec4( vp, 1.0 );
+			gl_Position = vec4( vp, 1.0 ) * view;
 		}";
 
 	const char* fragment_shader =
@@ -59,8 +71,18 @@ class Model
 		glAttachShader(shader, v_shader);
 		glAttachShader(shader, f_shader);
 		glLinkProgram(shader);
-		
+
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	void Render(Camera camera)
+	{
+		glUseProgram(shader);
+		GLint view = glGetUniformLocation(shader, "view");
+		glUniformMatrix4fv(view, 1, GL_FALSE, camera.view.a.ptr);
+		glBindVertexArray(vao);
+
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
 }
 
@@ -77,12 +99,12 @@ int mouse_action = 0;
 int mouse_x = 0;
 int mouse_y = 0;
 
-extern(C) @nogc nothrow void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+extern (C) @nogc nothrow void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
 	double dxpos, dypos;
 	glfwGetCursorPos(window, &dxpos, &dypos);
-	mouse_x = cast(int)dxpos;
-	mouse_y = cast(int)dypos;
+	mouse_x = cast(int) dxpos;
+	mouse_y = cast(int) dypos;
 	mouse_button = button;
 	mouse_action = action;
 	mouse_pending = true;
@@ -91,15 +113,15 @@ extern(C) @nogc nothrow void mouse_button_callback(GLFWwindow* window, int butto
 bool key_pending = false;
 uint key_chr = 0;
 
-extern(C) @nogc nothrow void text_callback(GLFWwindow* window, uint chr)
+extern (C) @nogc nothrow void text_callback(GLFWwindow* window, uint chr)
 {
 	key_pending = true;
 	key_chr = chr;
 }
 
-extern(C) @nogc nothrow void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+extern (C) @nogc nothrow void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if(key >= 256 && action == GLFW_PRESS)
+	if (key >= 256 && action == GLFW_PRESS)
 	{
 		key_pending = true;
 		key_chr = -key;
@@ -128,7 +150,14 @@ void Render_Loop()
 	glfwSwapInterval(1);
 	loadOpenGL();
 
-	Model[] models = [new Model];
+	Camera camera = Camera(float4x4([
+		1.0, 0.0, 0.0, 0.5,
+		0.0, 1.0, 0.0, 0.0,
+		0.0, 0.0, 1.0, 0.0,
+		0.0, 0.0, 0.0, 1.0,
+	]));
+
+	Model*[] models = [new Model];
 	foreach (model; models)
 	{
 		model.Init();
@@ -138,12 +167,12 @@ void Render_Loop()
 	{
 		glfwPollEvents();
 
-		if(mouse_pending)
+		if (mouse_pending)
 		{
 			mouse_pending = false;
 		}
 
-		if(key_pending)
+		if (key_pending)
 		{
 			key_pending = false;
 		}
@@ -159,10 +188,7 @@ void Render_Loop()
 
 		foreach (model; models)
 		{
-			glUseProgram(model.shader);
-			glBindVertexArray(model.vao);
-
-			glDrawArrays(GL_TRIANGLES, 0, 6);
+			model.Render(camera);
 		}
 
 		glfwSwapBuffers(window);
