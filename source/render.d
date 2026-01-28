@@ -9,28 +9,30 @@ class Mesh
 {
 	float[] points =
 		[
-			-0.5, -0.5, 0.5,
-			-0.5, 0.5, 0.5,
-			0.5, 0.5, 0.5,
-			0.5, -0.5, 0.5,
+			0.5, 0.5, 0.0,
+			-0.5, 0.5, 0.0,
+			-0.5, -0.5, 0.0,
+			0.5, -0.5, 0.0,
+			-0.5, -0.5, 0.0,
+			0.5, 0.5, 0.0,
 	];
 
 	GLuint vbo = 0;
 	GLuint vao = 0;
 
 	const char* vertex_shader =
-		"#version 410 core
+		"#version 460 core
 		in vec3 vp;
 		void main() {
 			gl_Position = vec4( vp, 1.0 );
 		}";
 
 	const char* fragment_shader =
-		"#version 410 core
+		"#version 460 core
 		out vec4 frag_color;
 		void main() {
-			frag_color = vec4( 0.5, 0.5, 0.0, 1.0 )
-		};";
+			frag_color = vec4( 0.5, 0.5, 0.0, 1.0 );
+		}";
 
 	GLuint shader = 0;
 
@@ -38,12 +40,12 @@ class Mesh
 	{
 		glGenBuffers(1, &vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, 12 * float.sizeof, points.ptr, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, points.length * float.sizeof, points.ptr, GL_STATIC_DRAW);
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 0, null);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, null);
 
 		GLuint v_shader = glCreateShader(GL_VERTEX_SHADER);
 		glShaderSource(v_shader, 1, &vertex_shader, null);
@@ -57,6 +59,8 @@ class Mesh
 		glAttachShader(shader, v_shader);
 		glAttachShader(shader, f_shader);
 		glLinkProgram(shader);
+		
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 }
 
@@ -158,7 +162,7 @@ void Render_Loop()
 			glUseProgram(mesh.shader);
 			glBindVertexArray(mesh.vao);
 
-			glDrawArrays(GL_TRIANGLES, 0, 4);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
 
 		glfwSwapBuffers(window);
