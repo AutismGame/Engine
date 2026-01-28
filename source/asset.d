@@ -12,5 +12,5 @@ enum AssetType
 struct AssetInfo
 {
 	AssetType type;
-	string filename;
+	UserdataRef dataref;
 }

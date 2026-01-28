@@ -5,7 +5,7 @@ import asset;
 import std.concurrency;
 import std.stdio;
 
-class Mesh
+class Model
 {
 	float[] points =
 		[
@@ -128,10 +128,10 @@ void Render_Loop()
 	glfwSwapInterval(1);
 	loadOpenGL();
 
-	Mesh[] meshes = [new Mesh];
-	foreach (mesh; meshes)
+	Model[] models = [new Model];
+	foreach (model; models)
 	{
-		mesh.Init();
+		model.Init();
 	}
 
 	while (!glfwWindowShouldClose(window) && Render_run)
@@ -157,10 +157,10 @@ void Render_Loop()
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 
-		foreach (mesh; meshes)
+		foreach (model; models)
 		{
-			glUseProgram(mesh.shader);
-			glBindVertexArray(mesh.vao);
+			glUseProgram(model.shader);
+			glBindVertexArray(model.vao);
 
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}

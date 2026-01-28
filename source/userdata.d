@@ -6,3 +6,9 @@ struct Userdata
 	User owner;
 	void[] data;
 }
+
+struct UserdataRef
+{
+	User owner;
+	ulong id;
+}

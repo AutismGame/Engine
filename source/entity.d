@@ -1,6 +1,6 @@
 import math;
 
-struct Bag
+struct Entity
 {
 	Transform3D t;
 	

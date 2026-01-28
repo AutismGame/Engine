@@ -1,4 +1,4 @@
-import bag;
+import entity;
 import script;
 import storage;
 import user;
@@ -12,15 +12,27 @@ enum WorldState
 	FOCUSED
 }
 
+struct WorldStorage
+{
+	Storage[User] storage;
+	
+	pragma(inline) Userdata DerefUserdata(UserdataRef r)
+	{
+		return storage[r.owner][r.id];
+	}
+	
+	alias this = storage;
+}
+
 class World
 {
 	WorldState state;
 
-	Bag[ulong] bags;
+	Entity[ulong] ents;
 	Script[ulong] scripts;
 	ulong[] scheduled_scripts;
 	
-	Storage[User] storage;
+	WorldStorage storage;
 	
 	void Tick(double delta)
 	{
