@@ -8,11 +8,18 @@ import math;
 
 struct Camera
 {
-	float4x4 view;
+	Transform3D transform;
+
+	void SetPosition(float3 position)
+	{
+		transform.position = float3([0, 0, 0]) - position;
+	}
 }
 
 struct Model
 {
+	Transform3D transform;
+
 	float[] points =
 		[
 			0.5, 0.5, 0.0,
@@ -29,14 +36,22 @@ struct Model
 	const char* vertex_shader =
 		"#version 460 core
 		in vec3 vp;
-		uniform mat4 view = mat4(
+		uniform mat4 view_matrix = mat4(
 			1.0, 0.0, 0.0, 0.0,
 			0.0, 1.0, 0.0, 0.0,
 			0.0, 0.0, 1.0, 0.0,
 			0.0, 0.0, 0.0, 1.0
 		);
+
+		uniform mat4 model_matrix = mat4(
+			1.0, 0.0, 0.0, 0.0,
+			0.0, 1.0, 0.0, 0.0,
+			0.0, 0.0, 1.0, 0.0,
+			0.0, 0.0, 0.0, 1.0
+		);
+
 		void main() {
-			gl_Position = vec4( vp, 1.0 ) * view;
+			gl_Position = vec4( vp, 1.0 ) * model_matrix * view_matrix;
 		}";
 
 	const char* fragment_shader =
@@ -78,8 +93,12 @@ struct Model
 	void Render(Camera camera)
 	{
 		glUseProgram(shader);
-		GLint view = glGetUniformLocation(shader, "view");
-		glUniformMatrix4fv(view, 1, GL_FALSE, camera.view.a.ptr);
+
+		GLint view = glGetUniformLocation(shader, "view_matrix");
+		glUniformMatrix4fv(view, 1, GL_FALSE, camera.view_matrix.a.ptr);
+		GLint model = glGetUniformLocation(shader, "model_matrix");
+		glUniformMatrix4fv(model, 1, GL_FALSE, model_matrix.a.ptr);
+
 		glBindVertexArray(vao);
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -151,13 +170,15 @@ void Render_Loop()
 	loadOpenGL();
 
 	Camera camera = Camera(float4x4([
-		1.0, 0.0, 0.0, 0.5,
+		1.0, 0.0, 0.0, 0.0,
 		0.0, 1.0, 0.0, 0.0,
 		0.0, 0.0, 1.0, 0.0,
 		0.0, 0.0, 0.0, 1.0,
 	]));
 
-	Model*[] models = [new Model];
+	camera.SetPosition(float3([-0.5, 0.0, 0.0]));
+
+	Model*[] models = [&Model()];
 	foreach (model; models)
 	{
 		model.Init();
