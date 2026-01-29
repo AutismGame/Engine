@@ -9,10 +9,26 @@ import math;
 struct Camera
 {
 	Transform3D transform;
+	
+	const float near = 0.2;
+	const float far = 9000;
+	const float top = 1*0.25f;
+	const float right = 1.77777*0.25f;
+	const float left = -1.77777*0.25f;
+	const float bottom = -1*0.25f;
+	
+	const float4x4 projmat = cast(float4x4)[
+		2*near/(right-left),0,0,0,
+		0,2*near/(top-bottom),0,0,
+		(right+left)/(right-left),(top+bottom)/(top-bottom),-(far+near)/(far-near),-1,
+		0,0,-2*(far*near)/(far-near),0
+	];
+	
+	alias this = transform;
 
 	void SetPosition(float3 position)
 	{
-		transform.position = float3([0, 0, 0]) - position;
+		transform.position = float3([0,0,0]) - position;
 	}
 }
 
@@ -35,28 +51,18 @@ struct Model
 
 	const char* vertex_shader =
 		"#version 460 core
-		in vec3 vp;
-		uniform mat4 view_matrix = mat4(
-			1.0, 0.0, 0.0, 0.0,
-			0.0, 1.0, 0.0, 0.0,
-			0.0, 0.0, 1.0, 0.0,
-			0.0, 0.0, 0.0, 1.0
-		);
-
-		uniform mat4 model_matrix = mat4(
-			1.0, 0.0, 0.0, 0.0,
-			0.0, 1.0, 0.0, 0.0,
-			0.0, 0.0, 1.0, 0.0,
-			0.0, 0.0, 0.0, 1.0
-		);
+		layout(location = 0) in vec3 vp;
+		uniform mat4 view_matrix;
+		uniform mat4 proj_matrix;
+		uniform mat4 model_matrix;
 
 		void main() {
-			gl_Position = vec4( vp, 1.0 ) * model_matrix * view_matrix;
+			gl_Position = proj_matrix * view_matrix * model_matrix * vec4( vp, 1.0 );
 		}";
 
 	const char* fragment_shader =
 		"#version 460 core
-		out vec4 frag_color;
+		layout(location = 0) out vec4 frag_color;
 		void main() {
 			frag_color = vec4( 0.5, 0.5, 0.0, 1.0 );
 		}";
@@ -77,10 +83,13 @@ struct Model
 		GLuint v_shader = glCreateShader(GL_VERTEX_SHADER);
 		glShaderSource(v_shader, 1, &vertex_shader, null);
 		glCompileShader(v_shader);
-
+		
+		
 		GLuint f_shader = glCreateShader(GL_FRAGMENT_SHADER);
 		glShaderSource(f_shader, 1, &fragment_shader, null);
 		glCompileShader(f_shader);
+
+		
 
 		shader = glCreateProgram();
 		glAttachShader(shader, v_shader);
@@ -92,13 +101,17 @@ struct Model
 
 	void Render(Camera camera)
 	{
+		float4x4 viewmat = cast(float4x4)camera;
+		float4x4 modelmat = cast(float4x4)transform;
 		glUseProgram(shader);
 
 		GLint view = glGetUniformLocation(shader, "view_matrix");
-		glUniformMatrix4fv(view, 1, GL_FALSE, camera.view_matrix.a.ptr);
+		glUniformMatrix4fv(view, 1, GL_FALSE, viewmat.ptr);
+		GLint proj = glGetUniformLocation(shader, "proj_matrix");
+		glUniformMatrix4fv(proj, 1, GL_FALSE, camera.projmat.ptr);
 		GLint model = glGetUniformLocation(shader, "model_matrix");
-		glUniformMatrix4fv(model, 1, GL_FALSE, model_matrix.a.ptr);
-
+		glUniformMatrix4fv(model, 1, GL_FALSE, modelmat.ptr);
+		
 		glBindVertexArray(vao);
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -169,21 +182,17 @@ void Render_Loop()
 	glfwSwapInterval(1);
 	loadOpenGL();
 
-	Camera camera = Camera(float4x4([
-		1.0, 0.0, 0.0, 0.0,
-		0.0, 1.0, 0.0, 0.0,
-		0.0, 0.0, 1.0, 0.0,
-		0.0, 0.0, 0.0, 1.0,
-	]));
+	Camera camera = Camera(Transform3D());
 
-	camera.SetPosition(float3([-0.5, 0.0, 0.0]));
+	camera.SetPosition(float3([-0.5, 0.0, 0.5]));
 
-	Model*[] models = [&Model()];
-	foreach (model; models)
+	Model[] models = [Model()];
+	foreach (ref model; models)
 	{
 		model.Init();
 	}
-
+	int testtime = 0;
+	import std.math;
 	while (!glfwWindowShouldClose(window) && Render_run)
 	{
 		glfwPollEvents();
@@ -206,11 +215,15 @@ void Render_Loop()
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
-
-		foreach (model; models)
+		camera.SetPosition(float3([sin(testtime*0.02f), 0.0, cos(testtime*0.026f)+1.5f]));
+		testtime++;
+		
+		foreach (ref model; models)
 		{
 			model.Render(camera);
 		}
+		
+		
 
 		glfwSwapBuffers(window);
 
