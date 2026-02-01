@@ -5,6 +5,7 @@ import asset;
 import std.concurrency;
 import std.stdio;
 import math;
+import app;
 
 struct Camera
 {
@@ -231,6 +232,7 @@ void Render_Loop()
 
 	glfwTerminate();
 	Render_run = false;
+	Kill_Everything_And_Quit();
 }
 
 // called in main

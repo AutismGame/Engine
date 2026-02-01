@@ -1,5 +1,6 @@
 import baseserver;
 import std.stdio;
+import std.concurrency;
 import game;
 import userinfo;
 import user;
@@ -17,6 +18,7 @@ class Server : BaseServer
 	
 	override ubyte[] ProcessPacket(uint packettype, ubyte[] data, sockaddr fromi)
 	{
+		writeln(packettype);
 		return [];
 	}
 	
@@ -25,4 +27,28 @@ class Server : BaseServer
 		game.Tick(delta);
 		super.Tick(delta);
 	}
+}
+
+
+shared(bool) Server_run;
+
+void Server_Loop()
+{
+	while(Server_run)
+	{
+		
+	}
+	Server_run = false;
+}
+
+// called in main
+public void Server_Init()
+{
+	Server_run = true;
+	spawn(&Server_Loop);
+}
+
+public void Server_End()
+{
+	Server_run = false;
 }

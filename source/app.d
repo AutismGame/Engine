@@ -11,7 +11,17 @@ import render;
 Server sv;
 Client cl;
 
+void Kill_Everything_And_Quit()
+{
+	Render_End();
+	Client_End();
+	Server_End();
+}
+
 void main(string[] args)
 {
 	Render_Init();
+	Server_Init();
+	Client_Init();
+	
 }
