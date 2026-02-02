@@ -17,7 +17,7 @@ struct Packet0Handshake // dab me up
 	Packet!(0) p;
 }
 
-struct Packet1SexPack // this may be a mistake
+struct Packet1Heartbeat // this may NOT be a mistake
 {
 	Packet!(1) p;
 }

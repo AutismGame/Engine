@@ -22,7 +22,7 @@ class BaseClient
 		auto packetLength = serversocket.receive(packet[]);
 		while(packetLength != Socket.ERROR && packetLength > 0)
 		{
-			HandlePacket(packet);
+			HandlePacket(packet[0..packetLength]);
 			packetLength = serversocket.receive(packet[]);
 		}
 	}
