@@ -20,5 +20,4 @@ void main(string[] args)
 	Render_Init();
 	Server_Init();
 	Client_Init();
-	
 }

@@ -1,14 +1,13 @@
 import user;
 import userdata;
 
-enum PACKAGE_BYTES : uint {
+public enum PACKET_BYTES : uint {
 	Error      = 0x80000000,
 	Processing = 0x40000000,
-	Registry   = 0x20000000
+	Registry   = 0x20000000,
+	User       = 0x10000000
 	// Encryption?
 }
-
-//! server packets
 
 struct Packet(uint ID)
 { align(1):
@@ -18,9 +17,11 @@ struct Packet(uint ID)
 
 struct RegistryPacket(uint ID)
 { align(1):
-	uint type = PACKAGE_BYTES.Registry | ID;
+	uint type = PACKET_BYTES.Registry | ID;
 	// TODO : ditto
 }
+
+//! server packets
 
 // dab me up
 struct Packet0Handshake
@@ -86,8 +87,8 @@ struct Packet3Userdata
 //! end server packets
 //! registry packets
 
-struct PacketR0Get
-{ align(1):
+struct PacketR0Get {
+	align(1):
 	RegistryPacket!(0) p;
 }
 
