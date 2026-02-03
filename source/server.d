@@ -27,7 +27,7 @@ class Server : BaseServer
 		{	
 			case 0:
 				writefln("Registering new user with id %d", last_userid);
-				const UserInfo newUser = {fromi, last_userid++, Clock.currTime()};
+				const UserInfo newUser = {fromi, cast(User)last_userid++, Clock.currTime()};
 				connected_users[fromi] = newUser;
 				retVal = [0x00, 0x00, 0x00, 0x00];
 				break;
