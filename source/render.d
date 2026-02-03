@@ -37,36 +37,14 @@ struct Model
 {
 	Transform3D transform;
 
-	float[] points =
-		[
-			0.5, 0.5, 0.0,
-			-0.5, 0.5, 0.0,
-			-0.5, -0.5, 0.0,
-			0.5, -0.5, 0.0,
-			-0.5, -0.5, 0.0,
-			0.5, 0.5, 0.0,
-	];
+	float[] vertices;
 
 	GLuint vbo = 0;
 	GLuint vao = 0;
 
-	const char* vertex_shader =
-		"#version 460 core
-		layout(location = 0) in vec3 vp;
-		uniform mat4 view_matrix;
-		uniform mat4 proj_matrix;
-		uniform mat4 model_matrix;
-
-		void main() {
-			gl_Position = proj_matrix * view_matrix * model_matrix * vec4( vp, 1.0 );
-		}";
-
-	const char* fragment_shader =
-		"#version 460 core
-		layout(location = 0) out vec4 frag_color;
-		void main() {
-			frag_color = vec4( 0.5, 0.5, 0.0, 1.0 );
-		}";
+	char* vertex_shader;
+	char* fragment_shader;
+		
 
 	GLuint shader = 0;
 
@@ -74,7 +52,7 @@ struct Model
 	{
 		glGenBuffers(1, &vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
-		glBufferData(GL_ARRAY_BUFFER, points.length * float.sizeof, points.ptr, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, vertices.length * float.sizeof, vertices.ptr, GL_STATIC_DRAW);
 		glGenVertexArrays(1, &vao);
 		glBindVertexArray(vao);
 		glEnableVertexAttribArray(0);
@@ -116,6 +94,18 @@ struct Model
 		glBindVertexArray(vao);
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+	}
+
+	void SetFragmentShader(string shader) {
+		fragment_shader = cast(char*)shader.ptr;
+	}
+
+	void SetVertexShader(string shader) {
+		vertex_shader = cast(char*)shader.ptr;
+	}
+
+	void SetVertices(float[] verts) {
+		vertices = verts;
 	}
 }
 
@@ -190,6 +180,32 @@ void Render_Loop()
 	Model[] models = [Model()];
 	foreach (ref model; models)
 	{
+		model.SetVertices([
+			0.5, 0.5, 0.0,
+			-0.5, 0.5, 0.0,
+			-0.5, -0.5, 0.0,
+			0.5, -0.5, 0.0,
+			-0.5, -0.5, 0.0,
+			0.5, 0.5, 0.0,
+		]);
+		model.SetFragmentShader(
+			"#version 460 core
+			layout(location = 0) out vec4 frag_color;
+			void main() {
+				frag_color = vec4( 0.5, 0.5, 0.0, 1.0 );
+			}"
+		);
+		model.SetVertexShader("
+			#version 460 core
+			layout(location = 0) in vec3 vp;
+			uniform mat4 view_matrix;
+			uniform mat4 proj_matrix;
+			uniform mat4 model_matrix;
+
+			void main() {
+				gl_Position = proj_matrix * view_matrix * model_matrix * vec4( vp, 1.0 );
+			}"
+		);
 		model.Init();
 	}
 	int testtime = 0;
@@ -197,16 +213,6 @@ void Render_Loop()
 	while (!glfwWindowShouldClose(window) && Render_run)
 	{
 		glfwPollEvents();
-
-		if (mouse_pending)
-		{
-			mouse_pending = false;
-		}
-
-		if (key_pending)
-		{
-			key_pending = false;
-		}
 
 		int width, height;
 
