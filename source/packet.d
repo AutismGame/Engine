@@ -87,8 +87,8 @@ struct Packet3Userdata
 //! end server packets
 //! registry packets
 
-struct PacketR0Get {
-	align(1):
+struct PacketR0Get
+{ align(1):
 	RegistryPacket!(0) p;
 }
 
