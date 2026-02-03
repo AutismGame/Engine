@@ -1,8 +1,10 @@
 import std.file;
 import std.path;
 import std.stdio;
-import glfw3.api;
-import dgui;
+// import glfw3.api;
+// import bindbc.glfw;
+// po chuj tu jest import glfw3
+// import dgui;
 import server;
 import client;
 import sex;

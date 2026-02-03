@@ -5,7 +5,8 @@ import std.process;
 import std.array;
 import std.parallelism;
 import std.string;
-import glfw3.api;
+// import glfw3.api;
+import bindbc.glfw;
 import std.conv;
 import std.ascii;
 

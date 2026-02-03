@@ -1,4 +1,4 @@
-import glfw3.api;
+import bindbc.glfw;
 import bindbc.opengl.util;
 import bindbc.opengl;
 import asset;
