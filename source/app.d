@@ -9,6 +9,7 @@ import server;
 import client;
 import sex;
 import render;
+import config;
 
 void Kill_Everything_And_Quit()
 {
@@ -19,6 +20,7 @@ void Kill_Everything_And_Quit()
 
 void main(string[] args)
 {
+	ParseConfig();
 	Render_Init();
 	Server_Init();
 	Client_Init();

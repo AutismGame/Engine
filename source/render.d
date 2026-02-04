@@ -6,6 +6,7 @@ import std.concurrency;
 import std.stdio;
 import math;
 import app;
+import config;
 
 struct Camera
 {
@@ -171,7 +172,12 @@ void Render_Loop()
 	glfwMakeContextCurrent(window);
 
 	glfwSwapInterval(1);
-	loadOpenGL();
+	
+	if (g_config.render_api == "opengl") {
+		loadOpenGL();
+	} else {
+		writeln("Unsupported graphics api: ", g_config.render_api);
+	}
 
 	Camera camera = Camera(Transform3D());
 
@@ -214,14 +220,16 @@ void Render_Loop()
 	{
 		glfwPollEvents();
 
-		int width, height;
+		if (g_config.render_api == "opengl") {
+			int width, height;
 
-		glEnable(GL_BLEND);
-		glfwGetFramebufferSize(window, &width, &height);
-		glViewport(0, 0, width, height);
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+			glEnable(GL_BLEND);
+			glfwGetFramebufferSize(window, &width, &height);
+			glViewport(0, 0, width, height);
+			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+			glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+		}
 		camera.SetPosition(float3([sin(testtime*0.02f), 0.0, cos(testtime*0.026f)+1.5f]));
 		testtime++;
 		

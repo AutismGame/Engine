@@ -1,0 +1,4 @@
+client_port 21370
+server_port 21370
+server_ip "127.0.0.1"
+render_api "opengl"

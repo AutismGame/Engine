@@ -6,6 +6,7 @@ import userinfo;
 import user;
 import std.datetime;
 import packet;
+import config;
 
 class Server : BaseServer
 {
@@ -83,7 +84,7 @@ shared(bool) Server_run;
 void Server_Loop()
 {	
 	Server sv = new Server();
-	sv.Listen(21370); // TODO : Unhardcode port
+	sv.Listen(g_config.server_port);
 	while(Server_run)
 	{
 		sv.Tick(0.016);

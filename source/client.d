@@ -6,6 +6,7 @@ import core.thread.osthread;
 import std.datetime;
 import std.bitmanip : read;
 import std.stdio;
+import config;
 
 class Client : BaseClient
 {
@@ -61,7 +62,7 @@ void Client_Loop()
 {
 	Client cl = new Client();
 	Thread.sleep( dur!("msecs")( 50 ) );
-	cl.Connect("127.0.0.1",21370); // TODO : Unhardcode port
+	cl.Connect(g_config.server_ip,g_config.client_port);
 	while(Client_run)
 	{
 		cl.Tick();

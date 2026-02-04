@@ -3,6 +3,9 @@
 	"versions": {
 		"bindbc-glfw": "1.1.2",
 		"bindbc-loader": "1.1.5",
-		"bindbc-opengl": "1.1.1"
+		"bindbc-opengl": "1.1.1",
+		"sdlang-d": "0.10.6",
+		"taggedalgebraic": "0.11.24",
+		"unit-threaded": "0.7.55"
 	}
 }

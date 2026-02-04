@@ -8,7 +8,7 @@
   * (C->R) User Creation, Registration and Log in
   * (C->R->C) Session tokens (*see below*)
 * Make render.d extensible and replace all hardcoded stuff with Userdata so clients can act on the renderer
-* Configuration files and Dynamic Settings
-  * Unhardcoding everything and replacing static properties (ports, ips, render contexts) using configuration files like .ini and replacing dynamic properties (like volume, mouse sensitivity, fov) with Settings or Userdata, respectively
+* Dynamic Settings
+  * Replace dynamic properties (like volume, mouse sensitivity, fov) with Settings or Userdata
 * Session token generation
   * Properties that need to be hashed to generate a asymmetrical, time-based, unique and temporary token
