@@ -1,15 +1,19 @@
 // SErialized X data
-import std.bitmanip;
-import std.system;
+T Read(T)(ref void[] input)
+{
+	T ret = *cast(T*)(input.ptr);
+	input = input[T.sizeof..$];
+	return ret;
+}
 
 void Serialize(T)(T v,ref void[] output)
 {
 	output ~= [v];
 }
 
-T Deserialize(T)(ref void[] input)
+void Deserialize(T)(ref void[] input, ref T output)
 {
-	return input.read!(T, Endian.littleEndian);
+	output = input.Read!(T);
 }
 
 void Serialize(T : T[])(T[] v, ref void[] output)
@@ -18,24 +22,18 @@ void Serialize(T : T[])(T[] v, ref void[] output)
 	output ~= cast(ubyte[])v;
 }
 
-T[] Deserialize(T : T[])(ref void[] input)
+void Deserialize(T : T[])(ref void[] input, ref T[] output)
 {
 	ulong arraylength = Deserialize!ulong(input);
-	T[] ret = new T[](arraylength);
-	foreach(ref T v; ret)
+	output = new T[](arraylength);
+	foreach(ref T v; output)
 	{
-		v = input.read!(T, Endian.littleEndian);
+		v = input.Read!(T);
 	}
-	return ret;
 }
 
 void Serialize(T : string)(string v,ref void[] output)
 {
 	output ~= [cast(ulong)v.length];
 	output ~= cast(ubyte[])v;
-}
-
-string Deserialize(T : string)(ref void[] input)
-{
-	return cast(string)Deserialize!ubyte(input);
 }

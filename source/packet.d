@@ -120,6 +120,34 @@ struct Packet3Userdata
 		}
 		return ret;
 	}
+	
+	Packet3Userdata Deserialize(void[] input)
+	{
+		Packet3Userdata ret;
+		input.Deserialize(ret.p);
+		input.Deserialize(ret.type);
+		switch(type)
+		{
+			case UserdataOp.Create:
+				input.Deserialize(ret.create.name);
+				break;
+			case UserdataOp.Modify:
+				input.Deserialize(ret.modify.id);
+				input.Deserialize(ret.modify.pos);
+				input.Deserialize(ret.modify.length);
+				input.Deserialize(ret.modify.data);
+				break;
+			case UserdataOp.SetName:
+				input.Deserialize(ret.setname.id);
+				input.Deserialize(ret.setname.name);
+				break;
+			case UserdataOp.Remove:
+				input.Deserialize(ret.remove);
+				break;
+			default: assert(0);
+		}
+		return ret;
+	}
 }
 
 struct Packet4CreateWorld
