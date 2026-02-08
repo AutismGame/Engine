@@ -7,6 +7,7 @@ license "GPL-3.0-or-later"
 dependency "bindbc-opengl" version="~>1.1.1"
 dependency "bindbc-glfw" version="~>1.1"
 dependency "sdlang-d" version="~>0.10.1"
+dependency "libsodiumd" version="~>0.2.0+1.0.18"
 
 versions "GLFW_34" "BindGLFW_Static" "GL_46" "GL_AllowDeprecated"
 
@@ -30,5 +31,5 @@ preBuildCommands "cd extern/daScript/build && cmake .. \
     -DDAS_HV_DISABLED=ON \
     -DDAS_IMGUI_DISABLED=ON \
     -DDAS_XBYAK_DISABLED=OFF" platform="posix"
-    
+
 preBuildCommands "cmake --build extern/daScript/build --target daslang -j 5" platform="posix"
