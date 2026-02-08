@@ -3,11 +3,32 @@ description "Autism"
 authors "wav3"
 copyright "Copyright © 2025, wav3"
 license "GPL-3.0-or-later"
+
 dependency "bindbc-opengl" version="~>1.1.1"
-// dependency "glfw-d" version="~>1.1.2"
 dependency "bindbc-glfw" version="~>1.1"
-versions "GLFW_34"
-versions "BindGLFW_Static"
-libs "glfw3"
 dependency "sdlang-d" version="~>0.10.1"
-versions "GL_AllowDeprecated" "GL_46"
+
+versions "GLFW_34" "BindGLFW_Static" "GL_46" "GL_AllowDeprecated"
+
+importPaths "extern/daScript/include"
+sourceFiles "source/daslang_bridge.c"
+dflags "-P-Iextern/daScript/include"
+
+libs "libDaScript" "libUriParser" "stdc++" "m" "dl" "pthread" "glfw3"
+lflags "-Lextern/daScript/lib"
+
+preBuildCommands "mkdir -p extern/daScript/build"
+
+preBuildCommands "cd extern/daScript/build && cmake .. \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DDAS_TUTORIAL_DISABLED=ON \
+    -DDAS_TESTS_DISABLED=ON \
+    -DDAS_GLFW_DISABLED=ON \
+    -DDAS_OPENGL_DISABLED=ON \
+    -DDAS_AUDIO_DISABLED=ON \
+    -DDAS_BGFX_DISABLED=ON \
+    -DDAS_HV_DISABLED=ON \
+    -DDAS_IMGUI_DISABLED=ON \
+    -DDAS_XBYAK_DISABLED=OFF" platform="posix"
+    
+preBuildCommands "cmake --build extern/daScript/build --target daslang -j 5" platform="posix"

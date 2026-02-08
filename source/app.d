@@ -10,6 +10,7 @@ import client;
 import sex;
 import render;
 import config;
+import script;
 
 void Kill_Everything_And_Quit()
 {
@@ -21,6 +22,7 @@ void Kill_Everything_And_Quit()
 void main(string[] args)
 {
 	ParseConfig();
+	ScriptInit();
 	Render_Init();
 	Server_Init();
 	Client_Init();
