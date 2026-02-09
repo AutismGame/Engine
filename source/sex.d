@@ -24,11 +24,36 @@ void Serialize(T : T[])(T[] v, ref void[] output)
 
 void Deserialize(T : T[])(ref void[] input, ref T[] output)
 {
-	ulong arraylength = Deserialize!ulong(input);
+	ulong arraylength;
+	input.Deserialize!ulong(arraylength);
 	output = new T[](arraylength);
 	foreach(ref T v; output)
 	{
 		v = input.Read!(T);
+	}
+}
+
+void Serialize(Key, T : T[Key])(T[Key] a, ref void[] output)
+{
+	output ~= [cast(ulong)a.length];
+	foreach(k, v; a)
+	{
+		k.Serialize(output);
+		v.Serialize(output);
+	}
+}
+
+void Deserialize(Key, T : T[Key])(ref void[] input, ref T[Key] output)
+{
+	ulong arraylength;
+	input.Deserialize!ulong(arraylength);
+	foreach(_; arraylength)
+	{
+		Key k;
+		input.Deserialize!Key(k);
+		T t;
+		input.Deserialize!T(t);
+		output[k] = t;
 	}
 }
 
