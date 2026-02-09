@@ -8,12 +8,11 @@ struct Account {
     ulong accountid;
     Key accountkey;
     
-    // Session TryNewSession() {
+    Session TryNewSession() {
         
-    // }
+    }
 }
 
-// Account TryCreateAccount() {
+Account TryCreateAccount() {
     
-// }
-// These prevent the program from compiling until implemented (thanks barracuda)
+}
