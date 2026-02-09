@@ -160,19 +160,20 @@ struct Packet4CreateWorld
 
 //! end server packets
 //! registry packets
+enum Information : ubyte { // this enum has been moved outside because its used so often
+	Success, // yay
+	Heartbeat,
+
+	ErrorInternal, // we fucked up
+	ErrorExternal, // your recieved data sucks (malformed)
+	RateLimit,
+}
 
 struct RegistryPacket_B0_Info
 { align(1):
 	RegistryPacket!(0) p;
 
-	enum Information : ubyte {
-		Success, // yay
-		Heartbeat,
-
-		ErrorInternal, // we fucked up
-		ErrorExternal, // your recieved data sucks (malformed)
-		RateLimit,
-	}
+	
 	Information info;
 }
 
@@ -262,7 +263,7 @@ struct RegistryPacket_C10_Account
 struct RegistryPacket_R10_Account // Response
 { align(1):
 	RegistryPacket!(10) p;
-	RegistryPacket_B0_Info.Information info;
+	Information info;
 
 	ulong accountid;
 	Key accountkey;

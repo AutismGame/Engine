@@ -11,6 +11,7 @@ import sex;
 import render;
 import config;
 import script;
+import test;
 
 void Kill_Everything_And_Quit()
 {
@@ -21,6 +22,8 @@ void Kill_Everything_And_Quit()
 
 void main(string[] args)
 {
+	RunAllTests();
+	
 	ParseConfig();
 	ScriptInit();
 	Render_Init();

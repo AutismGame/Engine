@@ -5,7 +5,8 @@ enum Tag : ubyte {
     Err
 };
 
-class Result(T, E) {
+class Result(T, E)
+{
     Tag tag;
     
     union {
@@ -13,21 +14,37 @@ class Result(T, E) {
         E err;
     }
     
-    this(T t) {
+    this(T t)
+    {
         this.tag = Tag.Ok;
         this.ok = t;
     }
     
-    this(E e) {
+    this(E e)
+    {
         this.tag = Tag.Err;
         this.err = e;
     }
 
-    pragma(inline) bool is_ok() {
+    pragma(inline) bool is_ok()
+    {
         return this.tag == Tag.Ok;
     }
     
-    pragma(inline) bool is_err() {
+    pragma(inline) bool is_err()
+    {
         return this.tag == Tag.Err;   
+    }
+    
+    T Unwrap()
+    {
+        assert(this.is_ok());
+        return this.ok;
+    }
+
+    E UnwrapErr()
+    {
+        assert(this.is_ok());
+        return this.err;
     }
 }

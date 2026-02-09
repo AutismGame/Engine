@@ -1,18 +1,29 @@
 import crypto;
+import result;
+import packet;
 
-struct Session {
+alias RSResult = Result!(Session, Information);
+alias RAResult = Result!(Account, Information);
+
+struct Session
+{
     Key token;
 }
 
-struct Account {
+struct Account
+{
     ulong accountid;
     Key accountkey;
-    
-    Session TryNewSession() {
-        throw new Error("unimplemented");
+
+    RSResult TryNewSession()
+    {
+        
+        
+        return new RSResult(Information.ErrorInternal);
     }
 }
 
-Account TryCreateAccount() {
+RAResult TryCreateAccount()
+{
     throw new Error("unimplemented");
 }
