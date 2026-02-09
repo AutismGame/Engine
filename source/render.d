@@ -18,6 +18,9 @@ import core.stdc.stdlib : malloc, free;
 import core.stdc.string : memcpy;
 import core.exception : onOutOfMemoryError;
 import std.utf : toUTFz;
+import bindbc.assimp;
+
+
 
 Model*[] models;
 // uint next_model_id = 0;
@@ -300,7 +303,18 @@ void Render_Loop()
 
 // called in main
 public void Render_Init()
-{
+{	
+	AssimpSupport ret = loadAssimp();
+
+	if (ret == AssimpSupport.noLibrary || ret == AssimpSupport.badLibrary) {
+        if (ret == AssimpSupport.noLibrary) {
+            writeln("Assimp DLL/so not found.");
+        } else {
+            writeln("Error loading Assimp: ", ret);
+        }
+        return;
+    }
+
 	Render_run = true;
 	spawn(&Render_Loop);
 }

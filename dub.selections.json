@@ -1,6 +1,7 @@
 {
 	"fileVersion": 1,
 	"versions": {
+		"bindbc-assimp5": "0.1.0",
 		"bindbc-glfw": "1.1.2",
 		"bindbc-loader": "1.1.5",
 		"bindbc-opengl": "1.1.1",

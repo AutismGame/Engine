@@ -6,8 +6,11 @@ license "GPL-3.0-or-later"
 
 dependency "bindbc-opengl" version="~>1.1.1"
 dependency "bindbc-glfw" version="~>1.1"
+dependency "bindbc-assimp5" version="~>0.1.0"
 dependency "sdlang-d" version="~>0.10.1"
 dependency "libsodiumd" version="~>0.2.0+1.0.18"
+
+// subConfiguration "bindbc-assimp" "static"
 
 versions "GLFW_34" "BindGLFW_Static" "GL_46" "GL_AllowDeprecated"
 
@@ -17,9 +20,9 @@ dflags "-P-Iextern/daScript/include"
 
 libs "libDaScript" "libUriParser" "stdc++" "m" "dl" "pthread" "glfw3"
 lflags "-Lextern/daScript/lib"
+// lflags "-Lextern/assimp/build/lib"
 
 preBuildCommands "mkdir -p extern/daScript/build"
-
 preBuildCommands "cd extern/daScript/build && cmake .. \
     -DCMAKE_BUILD_TYPE=Release \
     -DDAS_TUTORIAL_DISABLED=ON \
@@ -31,5 +34,13 @@ preBuildCommands "cd extern/daScript/build && cmake .. \
     -DDAS_HV_DISABLED=ON \
     -DDAS_IMGUI_DISABLED=ON \
     -DDAS_XBYAK_DISABLED=OFF" platform="posix"
-
 preBuildCommands "cmake --build extern/daScript/build --target daslang -j 5" platform="posix"
+
+// preBuildCommands "mkdir -p extern/assimp/build"
+// preBuildCommands "cd extern/assimp/build && cmake .. \
+//     -DASSIMP_BUILD_STATIC_LIB=ON \
+//     -DASSIMP_BUILD_TESTS=OFF \
+//     -DASSIMP_BUILD_ASSIMP_TOOLS=OFF \
+//     -DASSIMP_INSTALL_PDB=OFF \
+//     -DBUILD_SHARED_LIBS=OFF"
+// preBuildCommands "cmake --build extern/assimp/build --config Release"
