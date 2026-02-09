@@ -9,10 +9,10 @@ struct Account {
     Key accountkey;
     
     Session TryNewSession() {
-        
+        throw new Error("unimplemented");
     }
 }
 
 Account TryCreateAccount() {
-    
+    throw new Error("unimplemented");
 }
