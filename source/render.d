@@ -7,6 +7,7 @@ import std.stdio;
 import math;
 import app;
 import config;
+import script;
 
 struct Camera
 {
@@ -34,23 +35,39 @@ struct Camera
 	}
 }
 
-struct Model
-{
-	Transform3D transform;
+void checkShader(GLuint shader) {
+    GLint success;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        char[512] infoLog;
+        glGetShaderInfoLog(shader, 512, null, infoLog.ptr);
+        import std.stdio;
+        writeln("Shader Error: ", cast(string)infoLog);
+    }
+}
 
+struct Model
+{	
+	bool initialized = false;
+	char* vertex_shader;
+	char* fragment_shader;	
 	float[] vertices;
+	Transform3D transform;
 
 	GLuint vbo = 0;
 	GLuint vao = 0;
-
-	char* vertex_shader;
-	char* fragment_shader;
 		
-
 	GLuint shader = 0;
 
+	Script script;
+	
 	void Init()
-	{
+	{	
+		writeln("Init model");
+		writeln("vertex shader: ", fromStringz(vertex_shader));
+		writeln("fragment shader: ", fromStringz(fragment_shader));
+		writeln("vertices: ", vertices);
+
 		glGenBuffers(1, &vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
 		glBufferData(GL_ARRAY_BUFFER, vertices.length * float.sizeof, vertices.ptr, GL_STATIC_DRAW);
@@ -63,13 +80,13 @@ struct Model
 		GLuint v_shader = glCreateShader(GL_VERTEX_SHADER);
 		glShaderSource(v_shader, 1, &vertex_shader, null);
 		glCompileShader(v_shader);
+		checkShader(v_shader);
 		
 		
 		GLuint f_shader = glCreateShader(GL_FRAGMENT_SHADER);
 		glShaderSource(f_shader, 1, &fragment_shader, null);
 		glCompileShader(f_shader);
-
-		
+		checkShader(f_shader);
 
 		shader = glCreateProgram();
 		glAttachShader(shader, v_shader);
@@ -77,10 +94,12 @@ struct Model
 		glLinkProgram(shader);
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		initialized = true;
 	}
 
 	void Render(Camera camera)
-	{
+	{	
+		if (!initialized) return;
 		float4x4 viewmat = cast(float4x4)camera;
 		float4x4 modelmat = cast(float4x4)transform;
 		glUseProgram(shader);
@@ -96,17 +115,75 @@ struct Model
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 	}
+}
 
-	void SetFragmentShader(string shader) {
-		fragment_shader = cast(char*)shader.ptr;
-	}
+// Someone please clean this up
+import core.stdc.string : strdup;
+import daslang_bridge;
 
-	void SetVertexShader(string shader) {
-		vertex_shader = cast(char*)shader.ptr;
-	}
+import core.sync.mutex;
+import core.atomic;
 
-	void SetVertices(float[] verts) {
-		vertices = verts;
+Model*[] models;
+__gshared Model*[] initQueue;
+__gshared Mutex queueMutex;
+
+import core.simd;
+import std.string : fromStringz;
+
+import core.stdc.stdlib : malloc, free;
+import core.stdc.string : memcpy;
+import core.exception : onOutOfMemoryError;
+
+shared static this() {
+    queueMutex = new Mutex();
+}
+
+extern (C) {
+	struct das_model {
+		char* vertex_shader;
+		char* fragment_shader;	
+		float* vertices;
+	};
+
+	vec4f CreateModel(das_context* ctx, das_node* node, vec4f* args) {
+		cast(void)ctx; cast(void)node;
+		char* vert_shader = das_argument_string(args[0]);
+		if (!vert_shader) {
+			writeln("Invalid or null vertex shader!");
+		}
+		// writeln(fromStringz(vert_shader));
+		char* frag_shader = das_argument_string(args[1]);
+		if (!vert_shader) {
+			writeln("Invalid or null fragment shader!");
+		}
+		// writeln(fromStringz(frag_shader));
+		das_array * arr = cast(das_array *)das_argument_ptr(args[2]);
+
+		if (!arr) {
+			writeln("Invalid or null vertices!");
+		}
+
+		uint32_t size = arr.size;
+		float * data = cast(float *)arr.data;
+
+		float[] verts = data[0..size];
+
+		// Model model = Model(strdup(vert_shader), strdup(frag_shader), verts.dup);
+		Model* mdl = new Model();
+
+		mdl.vertex_shader = strdup(vert_shader);
+		mdl.fragment_shader = strdup(frag_shader);
+		mdl.vertices = verts.dup;
+		models ~= mdl;
+		synchronized(queueMutex) {
+			initQueue ~= mdl;
+		}
+
+		das_model * dmdl = cast(das_model *) malloc(das_model.sizeof);
+		// dmdl.vertices = cast(float *) malloc(float.sizeof * size);
+		// memcpy(dmdl.vertices, data, float.sizeof * size);
+		return das_result_ptr(&dmdl);
 	}
 }
 
@@ -183,37 +260,6 @@ void Render_Loop()
 
 	camera.SetPosition(float3([-0.5, 0.0, 0.5]));
 
-	Model[] models = [Model()];
-	foreach (ref model; models)
-	{
-		model.SetVertices([
-			0.5, 0.5, 0.0,
-			-0.5, 0.5, 0.0,
-			-0.5, -0.5, 0.0,
-			0.5, -0.5, 0.0,
-			-0.5, -0.5, 0.0,
-			0.5, 0.5, 0.0,
-		]);
-		model.SetFragmentShader(
-			"#version 460 core
-			layout(location = 0) out vec4 frag_color;
-			void main() {
-				frag_color = vec4( 0.5, 0.5, 0.0, 1.0 );
-			}"
-		);
-		model.SetVertexShader("
-			#version 460 core
-			layout(location = 0) in vec3 vp;
-			uniform mat4 view_matrix;
-			uniform mat4 proj_matrix;
-			uniform mat4 model_matrix;
-
-			void main() {
-				gl_Position = proj_matrix * view_matrix * model_matrix * vec4( vp, 1.0 );
-			}"
-		);
-		model.Init();
-	}
 	int testtime = 0;
 	import std.math;
 	while (!glfwWindowShouldClose(window) && Render_run)
@@ -233,7 +279,24 @@ void Render_Loop()
 		camera.SetPosition(float3([sin(testtime*0.02f), 0.0, cos(testtime*0.026f)+1.5f]));
 		testtime++;
 		
-		foreach (ref model; models)
+		//Init models (must be done here so its on the same thread as GLFW)
+		
+		Model*[] toInit;
+		synchronized(queueMutex) {
+			if (initQueue.length > 0) {
+				toInit = initQueue.dup;
+				initQueue.length = 0;
+			}
+		}
+
+		foreach (mdl; toInit)
+		{
+			mdl.Init();
+			models ~= mdl;
+			writeln("Model initialized and added to render list.");
+		}
+
+		foreach (model; models)
 		{
 			model.Render(camera);
 		}

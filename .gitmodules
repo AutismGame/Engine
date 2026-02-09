@@ -1,3 +1,4 @@
 [submodule "extern/daScript"]
 	path = extern/daScript
 	url = https://github.com/GaijinEntertainment/daScript.git
+	branch = master
