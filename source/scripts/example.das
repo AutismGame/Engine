@@ -1,5 +1,6 @@
 require render_module
 
+
 [export]
 def main {
     let verts <- [ 0.5, 0.5, 0.0, -0.5, 0.5, 0.0, -0.5, -0.5, 0.0, 0.5, -0.5, 0.0, -0.5, -0.5, 0.0, 0.5, 0.5, 0.0 ];
@@ -20,5 +21,6 @@ def main {
         frag_color = vec4( 0.5, 0.5, 0.0, 1.0 );
     \}";
         
-    var m = model_CreateModel(vert_shader, frag_shader, verts);
+    var mdl_id = model_CreateModel(vert_shader, frag_shader, verts);
+    print("model id is {mdl_id}\n");
 }
