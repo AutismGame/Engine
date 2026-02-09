@@ -8,6 +8,44 @@ import math;
 import app;
 import config;
 import script;
+import core.stdc.string : strdup;
+import daslang_bridge;
+import core.sync.mutex;
+import core.atomic;
+import core.simd;
+import std.string : fromStringz;
+import core.stdc.stdlib : malloc, free;
+import core.stdc.string : memcpy;
+import core.exception : onOutOfMemoryError;
+import std.utf : toUTFz;
+
+Model*[] models;
+// uint next_model_id = 0;
+__gshared int next_model_id = 0;
+__gshared Mutex counterMutex;
+
+__gshared Model*[] initQueue;
+__gshared Mutex queueMutex;
+
+shared static this() {
+    queueMutex = new Mutex();
+	counterMutex = new Mutex();
+}
+
+void das_initRenderModule(das_module_group* libgroup) {
+	das_module* mod = das_module_create("render_module".toUTFz!(char*));
+	das_modulegroup_add_module(libgroup, mod);
+	
+	das_module_bind_interop_function(
+		mod,
+		libgroup,
+		&CreateModel,
+		"model_CreateModel".toUTFz!(char*),
+		"CreateModel".toUTFz!(char*),
+		SIDEEFFECTS_modifyExternal,
+		"i ssC1<f>A".toUTFz!(char*)
+	);
+}
 
 struct Camera
 {
@@ -48,25 +86,22 @@ void checkShader(GLuint shader) {
 
 struct Model
 {	
+	int id;
 	bool initialized = false;
 	char* vertex_shader;
 	char* fragment_shader;	
 	float[] vertices;
 	Transform3D transform;
+	GLuint vbo, vao, shader;
 
-	GLuint vbo = 0;
-	GLuint vao = 0;
-		
-	GLuint shader = 0;
-
-	Script script;
+	// Script script; // This is for any dynamic function the model wants to do
 	
 	void Init()
 	{	
-		writeln("Init model");
-		writeln("vertex shader: ", fromStringz(vertex_shader));
-		writeln("fragment shader: ", fromStringz(fragment_shader));
-		writeln("vertices: ", vertices);
+		// writeln("Init model");
+		// writeln("vertex shader: ", fromStringz(vertex_shader));
+		// writeln("fragment shader: ", fromStringz(fragment_shader));
+		// writeln("vertices: ", vertices);
 
 		glGenBuffers(1, &vbo);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -117,74 +152,25 @@ struct Model
 	}
 }
 
-// Someone please clean this up
-import core.stdc.string : strdup;
-import daslang_bridge;
-
-import core.sync.mutex;
-import core.atomic;
-
-Model*[] models;
-__gshared Model*[] initQueue;
-__gshared Mutex queueMutex;
-
-import core.simd;
-import std.string : fromStringz;
-
-import core.stdc.stdlib : malloc, free;
-import core.stdc.string : memcpy;
-import core.exception : onOutOfMemoryError;
-
-shared static this() {
-    queueMutex = new Mutex();
-}
-
-extern (C) {
-	struct das_model {
-		char* vertex_shader;
-		char* fragment_shader;	
-		float* vertices;
-	};
-
-	vec4f CreateModel(das_context* ctx, das_node* node, vec4f* args) {
-		cast(void)ctx; cast(void)node;
-		char* vert_shader = das_argument_string(args[0]);
-		if (!vert_shader) {
-			writeln("Invalid or null vertex shader!");
-		}
-		// writeln(fromStringz(vert_shader));
-		char* frag_shader = das_argument_string(args[1]);
-		if (!vert_shader) {
-			writeln("Invalid or null fragment shader!");
-		}
-		// writeln(fromStringz(frag_shader));
-		das_array * arr = cast(das_array *)das_argument_ptr(args[2]);
-
-		if (!arr) {
-			writeln("Invalid or null vertices!");
-		}
-
-		uint32_t size = arr.size;
-		float * data = cast(float *)arr.data;
-
-		float[] verts = data[0..size];
-
-		// Model model = Model(strdup(vert_shader), strdup(frag_shader), verts.dup);
-		Model* mdl = new Model();
-
-		mdl.vertex_shader = strdup(vert_shader);
-		mdl.fragment_shader = strdup(frag_shader);
-		mdl.vertices = verts.dup;
-		models ~= mdl;
-		synchronized(queueMutex) {
-			initQueue ~= mdl;
-		}
-
-		das_model * dmdl = cast(das_model *) malloc(das_model.sizeof);
-		// dmdl.vertices = cast(float *) malloc(float.sizeof * size);
-		// memcpy(dmdl.vertices, data, float.sizeof * size);
-		return das_result_ptr(&dmdl);
+extern(C) vec4f CreateModel(das_context* ctx, das_node* node, vec4f* args) {
+	Model* mdl = new Model();
+	synchronized(counterMutex) {
+		mdl.id = next_model_id++;
 	}
+
+	mdl.vertex_shader = strdup(das_argument_string(args[0]));
+	mdl.fragment_shader = strdup(das_argument_string(args[1]));
+
+	das_array * arr = cast(das_array *)das_argument_ptr(args[2]);
+	float * data = cast(float *)arr.data;
+
+	mdl.vertices = data[0 .. arr.size].dup;
+
+	synchronized(queueMutex) {
+		initQueue ~= mdl;
+	}
+
+	return das_result_int(mdl.id);
 }
 
 extern (C) @nogc nothrow void errorCallback(int error, const(char)* description)
@@ -292,8 +278,9 @@ void Render_Loop()
 		foreach (mdl; toInit)
 		{
 			mdl.Init();
-			models ~= mdl;
-			writeln("Model initialized and added to render list.");
+			models.length = next_model_id;
+			models[mdl.id] = mdl;
+			// writeln("Model initialized and added to render list.");
 		}
 
 		foreach (model; models)
